@@ -1,3 +1,5 @@
+require 'csv'
+
 module SpreeReportsOverview
   module Reports
     class OrdersOverview < SpreeReportsOverview::Reports::Base
@@ -117,27 +119,36 @@ module SpreeReportsOverview
       end
       
       def to_csv
-    
-        CSV.generate(headers: true, col_sep: ";") do |csv|
-          csv << %w{date date_formatted count item_count_total items_per_order avg_total total item_total adjustment_total shipment_total promo_total included_tax_total }
-      
+        CSV.generate(headers: true, col_sep: ",") do |csv|
+          csv << %w{sep=,}
+          # csv << %w{date date_formatted count item_count_total items_per_order avg_total total item_total adjustment_total shipment_total promo_total included_tax_total }
+          csv << %w{order_number delivery_date first_name last_name 40_jolly 40_kumo 40_pacific 60_combo 80_combo knife special_instructions }
           @data.each do |item|
             csv << [
               item[:date],
-              item[:date_formatted],
-              item[:count],
-              item[:item_count_total],
-              item[:items_per_order],
-              item[:avg_total],
-              item[:total],
-              item[:item_total],
-              item[:adjustment_total],
-              item[:shipment_total],
-              item[:promo_total],
-              item[:included_tax_total]
+              item[:delivery_date],
+              item[:first_name],
+              item[:last_name],
+              item[:count_40_jolly],
+              item[:count_40_kumo],
+              item[:count_40_pacific],
+              item[:count_60_combo],
+              item[:count_80_combo],
+              item[:count_knife],
+              item[:special_instructions]
             ]
           end
-      
+          
+          csv << [
+            "TOTALS",'','','',
+            :count_40_jolly,
+            :count_40_kumo,
+            :count_40_pacific,
+            :count_60_combo,
+            :count_80_combo,
+            :count_knife,
+            :special_instructions
+          ]
         end
     
       end
