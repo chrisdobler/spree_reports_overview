@@ -69,24 +69,12 @@ module SpreeReportsOverview
           date_column = :created_at
           @sales = Spree::Order.where(state: @state)
         end
-    
+
         @sales = @sales.where("#{date_column.to_s} >= ?", @date_start) if @date_start
         @sales = @sales.where(currency: @currency) if @currencies.size > 1
         @sales = @sales.where(store_id: @store) if @stores.size > 2 && @store != "all"        
         @sales = without_excluded_orders(@sales)
         
-        # group by
-
-        if @group_by == :year
-          @sales = @sales.group_by_year(date_column, time_zone: SpreeReports.time_zone)
-        elsif @group_by == :month
-          @sales = @sales.group_by_month(date_column, time_zone: SpreeReports.time_zone)
-        elsif @group_by == :week
-          # %W => week start: monday, %U => week start: sunday
-          @sales = @sales.group_by_week(date_column, time_zone: SpreeReports.time_zone)
-        else
-          @sales = @sales.group_by_day(date_column, time_zone: SpreeReports.time_zone)
-        end
         
         @sales_count = @sales.count
         @sales_total = @sales.sum(:total)
@@ -96,28 +84,45 @@ module SpreeReportsOverview
         @sales_promo_total = @sales.sum(:promo_total)
         @sales_included_tax_total = @sales.sum(:included_tax_total)
         @sales_item_count_total = @sales.sum(:item_count)
-        
+
+        @sales = @sales.to_a
+
       end
       
       def build_response
-        @data = @sales_count.map do |k, v|
+
+        variants_count = Hash.new
+        @variants_totals = Hash.new
+
+        $i = 0
+        while $i < @sales_count do
+          @sales[$i].line_items.each do |x|
+            variants_count[$i] ? "" : variants_count[$i] = Hash.new
+            @variants_totals[x.variant_id] ? "" : @variants_totals[x.variant_id] = 0
+            @variants_totals[x.variant_id]+= 1
+            variants_count[$i][x.variant_id] ? "" : variants_count[$i][x.variant_id] = 0
+            variants_count[$i][x.variant_id]= variants_count[$i][x.variant_id] + 1
+          end
+          $i +=1
+        end
+
+        @data = (0..@sales_count-1).map do |k,i|
           {
-            date: k,
-            date_formatted: SpreeReports::Helper.date_formatted(k, @group_by),
-            count: v,
-            total: @sales_total[k].to_f,
-            item_total: @sales_item_total[k].to_f,
-            avg_total: SpreeReports::Helper.round(SpreeReports::Helper.divide(@sales_total[k].to_f, v)),
-            adjustment_total: @sales_adjustment_total[k].to_f,
-            shipment_total: @sales_shipment_total[k].to_f,
-            promo_total: @sales_promo_total[k].to_f,
-            included_tax_total: @sales_included_tax_total[k].to_f,
-            item_count_total: @sales_item_count_total[k].to_i,
-            items_per_order: SpreeReports::Helper.round(SpreeReports::Helper.divide(@sales_item_count_total[k].to_f, v.to_f))
+            order_number: @sales[k].number,
+            delivery_date: @sales[k].customer_delivery_date,
+            first_name: Spree::Address.find(@sales[k].ship_address_id) ? Spree::Address.find(@sales[k].ship_address_id).firstname : "",
+            last_name: Spree::Address.find(@sales[k].ship_address_id) ? Spree::Address.find(@sales[k].ship_address_id).lastname : "",
+            count_40_jolly: variants_count[k][28] ? variants_count[k][28] : "",
+            count_40_kumo: variants_count[k][27] ? variants_count[k][27] : "",
+            count_40_pacific: variants_count[k][29] ? variants_count[k][29] : "",
+            count_60_combo: variants_count[k][41] ? variants_count[k][41] : "",
+            count_80_combo: variants_count[k][42] ? variants_count[k][42] : "",
+            count_knife: variants_count[k][32] ? variants_count[k][32] : "",
+            special_instructions: @sales[k].special_instructions,
           }
         end
       end
-      
+
       def to_csv
         CSV.generate(headers: true, col_sep: ",") do |csv|
           csv << %w{sep=,}
@@ -125,7 +130,7 @@ module SpreeReportsOverview
           csv << %w{order_number delivery_date first_name last_name 40_jolly 40_kumo 40_pacific 60_combo 80_combo knife special_instructions }
           @data.each do |item|
             csv << [
-              item[:date],
+              item[:order_number],
               item[:delivery_date],
               item[:first_name],
               item[:last_name],
@@ -141,13 +146,12 @@ module SpreeReportsOverview
           
           csv << [
             "TOTALS",'','','',
-            :count_40_jolly,
-            :count_40_kumo,
-            :count_40_pacific,
-            :count_60_combo,
-            :count_80_combo,
-            :count_knife,
-            :special_instructions
+            @variants_totals[28],
+            @variants_totals[27],
+            @variants_totals[29],
+            @variants_totals[41],
+            @variants_totals[42],
+            @variants_totals[32],
           ]
         end
     
