@@ -1,0 +1,145 @@
+<%= stylesheet_link_tag 'spree_reports/spree_reports', media: 'all' %>
+<%= javascript_include_tag "//www.google.com/jsapi", "chartkick" %>
+
+
+<% content_for :page_title do %>
+  <%= link_to Spree.t(:reports), spree.admin_reports_url %> /
+  <%= Spree.t(:orders_overview) %>
+<% end %>
+
+
+
+<div class="spree_reports report">
+  
+  
+  <div class="options">
+    
+    <%= form_tag "", method: :get, class: "options" do %>
+  
+      <span class="option">
+        group by:
+        <%= select_tag "group_by", options_for_select(@report.group_by_list, selected: @report.group_by) %>
+      </span>
+    
+      <span class="option">
+        <span title="<%= @report.date_start ? "date_start: #{l(@report.date_start.to_date)}" : "" %>">months:</span>
+        <%= select_tag "months", options_for_select(SpreeReports.report_months, selected: @report.months) %>
+      </span>
+    
+      <span class="option">
+        state:
+        <%= select_tag "state", options_for_select(@report.states, selected: @report.state) %>
+      </span>
+    
+      <% if @report.currencies.size > 1 %>
+        <span class="option">
+          currency:
+          <%= select_tag "currency", options_for_select(@report.currencies, selected: @report.currency) %>
+        </span>
+      <% end %>
+  
+      <% if @report.stores.size > 2 %>
+        <span class="option">
+          store:
+          <%= select_tag "store", options_for_select(@report.stores, selected: @report.store) %>
+        </span>
+      <% end %>
+  
+      <%= submit_tag 'reload' %>
+  
+    <% end %>
+    
+  </div>
+  
+  <div class="table">
+    
+    <table class="data" border="1">
+      <tr>
+        <th><%= @report.group_by.capitalize %></th>
+        <th>Orders</th>
+        <th class="help" title="Item Count Total">ICT</th>
+        <th class="help" title="Items per Order">IPO</th>
+        <th class="help" title="Average Total">Avg. T.</th>
+        <th class="help" title="Total">Total</th>
+        <th class="help" title="Item Total">Item T.</th>
+        <th class="help" title="Adjustment Total">Adjustment T.</th>
+        <th class="help" title="Shipment Total">Shipment T.</th>
+        <th class="help" title="Promo Total">Promo T.</th>
+        <th class="help" title="Included Tax Total">Included Tax T.</th>
+      </tr>
+  
+      <% @report.data.each do |item| %>
+        <tr>
+          <td><%= item[:date_formatted] %></td>
+          <td><%= number_with_delimiter(item[:count]) %></td>
+          <td><%= number_with_delimiter(item[:item_count_total]) %></td>
+          <td><%= number_with_precision(item[:items_per_order], precision: 2) %></td>
+          <td><%= Spree::Money.new(item[:avg_total], :currency => @report.currency).to_s %></td>
+          <td><%= Spree::Money.new(item[:total], :currency => @report.currency).to_s %></td>
+          <td><%= Spree::Money.new(item[:item_total], :currency => @report.currency).to_s %></td>
+          <td><%= Spree::Money.new(item[:adjustment_total], :currency => @report.currency).to_s %></td>
+          <td><%= Spree::Money.new(item[:shipment_total], :currency => @report.currency).to_s %></td>
+          <td><%= Spree::Money.new(item[:promo_total], :currency => @report.currency).to_s %></td>
+          <td><%= Spree::Money.new(item[:included_tax_total], :currency => @report.currency).to_s %></td>
+        </tr>
+      <% end %>
+  
+    </table>
+  
+  </div>
+
+  <div class="charts">
+     
+     <h2>Order Count</h2>
+     <div class="chart">
+       <%= column_chart Hash[@report.data.collect { |i| [i[:date_formatted], i[:count]] }] %>
+     </div>
+  
+     <h2>Item Count Total</h2>
+     <div class="chart">
+       <%= column_chart Hash[@report.data.collect { |i| [i[:date_formatted], i[:item_count_total]] }] %>
+     </div>
+  
+     <h2>Items per Order</h2>
+     <div class="chart">
+       <%= column_chart Hash[@report.data.collect { |i| [i[:date_formatted], i[:items_per_order]] }] %>
+     </div>
+     
+     <h2>Average Total</h2>
+     <div class="chart">
+       <%= column_chart Hash[@report.data.collect { |i| [i[:date_formatted], i[:avg_total]] }] %>
+     </div>
+          
+     <h2>Total & Item Total</h2>
+     <div class="chart">
+       <%=
+         column_chart [
+           { name: "Total", data: Hash[@report.data.collect { |i| [i[:date_formatted], i[:total]] }] },
+           { name: "Item Total", data: Hash[@report.data.collect { |i| [i[:date_formatted], i[:item_total]] }] }
+         ]
+       %>
+     </div>
+     
+     <h2>Misc Totals</h2>
+     <div class="chart">
+       <%=
+         column_chart [
+           { name: "Shipment Total", data: Hash[@report.data.collect { |i| [i[:date_formatted], i[:shipment_total]] }] },
+           { name: "Included Tax Total", data: Hash[@report.data.collect { |i| [i[:date_formatted], i[:included_tax_total]] }] },
+           { name: "Adjustment Total", data: Hash[@report.data.collect { |i| [i[:date_formatted], i[:adjustment_total]] }] },
+           { name: "Promo Total", data: Hash[@report.data.collect { |i| [i[:date_formatted], i[:promo_total]] }] }
+         ]
+       %>
+     </div>
+     
+  </div>
+  
+  <div class="permalink">
+    <h2>Permalink</h2>
+    <input id="spree_reports_permalink" type="text" value="<%= request.url.split('?').first + "?" + params.except(:utf8, :commit, :action, :controller).to_query %>" onclick="$(this).select();return;">
+    <% if SpreeReports.csv_export %>
+      <%= link_to 'Download as CSV', params.except(:utf8, :commit).merge(format: "csv") %>
+    <% end %>
+  </div>
+  
+</div>
