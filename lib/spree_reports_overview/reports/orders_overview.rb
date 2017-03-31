@@ -110,8 +110,8 @@ module SpreeReportsOverview
           {
             order_number: @sales[k].number,
             delivery_date: @sales[k].customer_delivery_date,
-            first_name: Spree::Address.find(@sales[k].ship_address_id) ? Spree::Address.find(@sales[k].ship_address_id).firstname : "",
-            last_name: Spree::Address.find(@sales[k].ship_address_id) ? Spree::Address.find(@sales[k].ship_address_id).lastname : "",
+            first_name: Spree::Address.find_by_id(@sales[k].ship_address_id) ? Spree::Address.find_by_id(@sales[k].ship_address_id).firstname : "",
+            last_name: Spree::Address.find_by_id(@sales[k].ship_address_id) ? Spree::Address.find_by_id(@sales[k].ship_address_id).lastname : "",
             count_40_jolly: variants_count[k][28] ? variants_count[k][28] : "",
             count_40_kumo: variants_count[k][27] ? variants_count[k][27] : "",
             count_40_pacific: variants_count[k][29] ? variants_count[k][29] : "",
