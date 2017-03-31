@@ -15,16 +15,6 @@
   <div class="options">
     
     <%= form_tag "", method: :get, class: "options" do %>
-  
-      <span class="option">
-        group by:
-        <%= select_tag "group_by", options_for_select(@report.group_by_list, selected: @report.group_by) %>
-      </span>
-    
-      <span class="option">
-        <span title="<%= @report.date_start ? "date_start: #{l(@report.date_start.to_date)}" : "" %>">months:</span>
-        <%= select_tag "months", options_for_select(SpreeReports.report_months, selected: @report.months) %>
-      </span>
     
       <span class="option">
         state:
