@@ -45,83 +45,38 @@
     
     <table class="data" border="1">
       <tr>
-        <th><%= @report.group_by.capitalize %></th>
-        <th>Orders</th>
-        <th class="help" title="Item Count Total">ICT</th>
-        <th class="help" title="Items per Order">IPO</th>
-        <th class="help" title="Average Total">Avg. T.</th>
-        <th class="help" title="Total">Total</th>
-        <th class="help" title="Item Total">Item T.</th>
-        <th class="help" title="Adjustment Total">Adjustment T.</th>
-        <th class="help" title="Shipment Total">Shipment T.</th>
-        <th class="help" title="Promo Total">Promo T.</th>
-        <th class="help" title="Included Tax Total">Included Tax T.</th>
+        <th class="help" title="order_number">order_number</th>
+        <th class="help" title="delivery_date">delivery_date</th>
+        <th class="help" title="first_name">first_name</th>
+        <th class="help" title="last_name">last_name</th>
+        <th class="help" title="count_40_jolly">40 jolly</th>
+        <th class="help" title="count_40_kumo">40 kumo</th>
+        <th class="help" title="count_40_pacific">40 pacific</th>
+        <th class="help" title="count_60_combo">60 combo</th>
+        <th class="help" title="count_80_combo">80 combo</th>
+        <th class="help" title="count_knife">knife</th>
+        <th class="help" title="special_instruction">special_instruction</th>
+
       </tr>
   
       <% @report.data.each do |item| %>
         <tr>
-          <td><%= item[:date_formatted] %></td>
-          <td><%= number_with_delimiter(item[:count]) %></td>
-          <td><%= number_with_delimiter(item[:item_count_total]) %></td>
-          <td><%= number_with_precision(item[:items_per_order], precision: 2) %></td>
-          <td><%= Spree::Money.new(item[:avg_total], :currency => @report.currency).to_s %></td>
-          <td><%= Spree::Money.new(item[:total], :currency => @report.currency).to_s %></td>
-          <td><%= Spree::Money.new(item[:item_total], :currency => @report.currency).to_s %></td>
-          <td><%= Spree::Money.new(item[:adjustment_total], :currency => @report.currency).to_s %></td>
-          <td><%= Spree::Money.new(item[:shipment_total], :currency => @report.currency).to_s %></td>
-          <td><%= Spree::Money.new(item[:promo_total], :currency => @report.currency).to_s %></td>
-          <td><%= Spree::Money.new(item[:included_tax_total], :currency => @report.currency).to_s %></td>
+          <td><%=item[:order_number]%></td>
+          <td><%=item[:delivery_date]%></td>
+          <td><%=item[:first_name]%></td>
+          <td><%=item[:last_name]%></td>
+          <td><%=item[:count_40_jolly]%></td>
+          <td><%=item[:count_40_kumo]%></td>
+          <td><%=item[:count_40_pacific]%></td>
+          <td><%=item[:count_60_combo]%></td>
+          <td><%=item[:count_80_combo]%></td>
+          <td><%=item[:count_knife]%></td>
+          <td><%=item[:special_instructions]%></td>
         </tr>
       <% end %>
   
     </table>
   
-  </div>
-
-  <div class="charts">
-     
-     <h2>Order Count</h2>
-     <div class="chart">
-       <%= column_chart Hash[@report.data.collect { |i| [i[:date_formatted], i[:count]] }] %>
-     </div>
-  
-     <h2>Item Count Total</h2>
-     <div class="chart">
-       <%= column_chart Hash[@report.data.collect { |i| [i[:date_formatted], i[:item_count_total]] }] %>
-     </div>
-  
-     <h2>Items per Order</h2>
-     <div class="chart">
-       <%= column_chart Hash[@report.data.collect { |i| [i[:date_formatted], i[:items_per_order]] }] %>
-     </div>
-     
-     <h2>Average Total</h2>
-     <div class="chart">
-       <%= column_chart Hash[@report.data.collect { |i| [i[:date_formatted], i[:avg_total]] }] %>
-     </div>
-          
-     <h2>Total & Item Total</h2>
-     <div class="chart">
-       <%=
-         column_chart [
-           { name: "Total", data: Hash[@report.data.collect { |i| [i[:date_formatted], i[:total]] }] },
-           { name: "Item Total", data: Hash[@report.data.collect { |i| [i[:date_formatted], i[:item_total]] }] }
-         ]
-       %>
-     </div>
-     
-     <h2>Misc Totals</h2>
-     <div class="chart">
-       <%=
-         column_chart [
-           { name: "Shipment Total", data: Hash[@report.data.collect { |i| [i[:date_formatted], i[:shipment_total]] }] },
-           { name: "Included Tax Total", data: Hash[@report.data.collect { |i| [i[:date_formatted], i[:included_tax_total]] }] },
-           { name: "Adjustment Total", data: Hash[@report.data.collect { |i| [i[:date_formatted], i[:adjustment_total]] }] },
-           { name: "Promo Total", data: Hash[@report.data.collect { |i| [i[:date_formatted], i[:promo_total]] }] }
-         ]
-       %>
-     </div>
-     
   </div>
   
   <div class="permalink">
