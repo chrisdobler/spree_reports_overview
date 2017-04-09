@@ -15,10 +15,20 @@
   <div class="options">
     
     <%= form_tag "", method: :get, class: "options" do %>
-    
+
+      <span class="option">
+        <span title="<%= @report.date_start ? "date_start: #{l(@report.date_start.to_date)}" : "" %>">months:</span>
+        <%= select_tag "months", options_for_select(SpreeReports.report_months, selected: @report.months) %>
+      </span>    
+
       <span class="option">
         state:
         <%= select_tag "state", options_for_select(@report.states, selected: @report.state) %>
+      </span>
+
+      <span class="option">
+        shipment state:
+        <%= select_tag "shipment_state", options_for_select(@report.shipment_states, selected: @report.shipment_state) %>
       </span>
     
       <% if @report.currencies.size > 1 %>
