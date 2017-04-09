@@ -5,7 +5,7 @@ module SpreeReportsOverview
     class OrdersOverview < SpreeReportsOverview::Reports::Base
       
       attr_accessor :params, :data
-      attr_accessor :currencies, :currency, :stores, :store, :group_by_list, :group_by, :states, :state, :months, :date_start
+      attr_accessor :currencies, :currency, :stores, :store, :group_by_list, :group_by, :states, :state, :shipment_state, :shipment_states,:months, :date_start
       
       def initialize(params)
         @params = params
@@ -28,7 +28,11 @@ module SpreeReportsOverview
         # states
         @states = %w{complete_paid complete incomplete cart address delivery payment confirm canceled}
         @state = @states.include?(params[:state]) ? params[:state] : "complete_paid"
-        
+
+        # shipment states
+        @shipment_states = %w{ready shipped}
+        @shipment_state = @shipment_states.include?(params[:shipment_state]) ? params[:shipment_state] : "ready"        
+
         # ******************************************************************************************************
         # MONTHS
     
@@ -53,22 +57,33 @@ module SpreeReportsOverview
         
         # select by state
         
-        if @state == "complete_paid"
+        # if @state == "complete_paid"
+        #   date_column = :completed_at
+        #   @sales = Spree::Order.complete.where(payment_state: 'paid')
+        # elsif @state == "complete"
+        #   date_column = :completed_at
+        #   @sales = Spree::Order.complete
+        # elsif @state == "incomplete"
+        #   date_column = :created_at
+        #   @sales = Spree::Order.incomplete
+        # elsif @state == "canceled"
+        #   date_column = :canceled_at
+        #   @sales = Spree::Order.where.not(canceled_at: nil)
+        # else
+        #   date_column = :created_at
+        #   @sales = Spree::Order.where(state: @state)
+        # end
+
+        # select by shipment state
+        
+        if @shipment_state == "ready"
           date_column = :completed_at
-          @sales = Spree::Order.complete.where(payment_state: 'paid')
-        elsif @state == "complete"
+          @sales = Spree::Order.complete.where(payment_state: 'paid', shipment_state: 'ready')
+        elsif @shipment_state == "shipped"
           date_column = :completed_at
-          @sales = Spree::Order.complete
-        elsif @state == "incomplete"
-          date_column = :created_at
-          @sales = Spree::Order.incomplete
-        elsif @state == "canceled"
-          date_column = :canceled_at
-          @sales = Spree::Order.where.not(canceled_at: nil)
-        else
-          date_column = :created_at
-          @sales = Spree::Order.where(state: @state)
+          @sales = Spree::Order.complete.where(payment_state: 'paid', shipment_state: 'shipped')
         end
+
 
         @sales = @sales.where("#{date_column.to_s} >= ?", @date_start) if @date_start
         @sales = @sales.where(currency: @currency) if @currencies.size > 1
